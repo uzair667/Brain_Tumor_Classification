@@ -1,0 +1,9 @@
+.vscode
+BrainTumor32EpochsCategorical
+BTC_IMG_DTST
+dajngo_env
+uploads
+populate.py
+prediction_BTC.py
+processing_BTC.py
+training_BTC.py
