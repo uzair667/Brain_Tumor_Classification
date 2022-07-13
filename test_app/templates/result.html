@@ -3,7 +3,7 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title>Brain Tumor Classification</title>
+    <title>Brain Tumor Classification Results</title>
     <link rel="stylesheet" href={% static "css_portion/style.css" %}/>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
@@ -12,22 +12,22 @@
     <center>
       <nav class="navbar navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">Brain Tumor Classification Using CNN</a>
+            <a class="navbar-brand" href="#">Brain Tumor Classification Results</a>
         </div>
     </nav>
       <div class="container">
         <div class="jumbotron">
-          <h1 align="center">Brain Tumor Classification</h1>
+          <h1 align="center">Brain Tumor Classification Prediction</h1>
           <img src= "{% static 'images/BTC.jpg' %}">
-      <form method="post" action= {% url 'check' %} enctype="multipart/form-data">
-        {{ form.as_p }}
-        {%csrf_token%}
-      <div class="form-group">
-        <label for="exampleFormControlFile1">Enter a MRI picture to scan for classification</label>
-        <input type="file" class="form-control-file" name="test_file"  accept=".jpg, .png, .jpeg" required >
-        <input type="submit" class="btn btn-primary" value="submit">
-      </div>
-    </form>
+          {% if result %}
+    <ul>
+    {% for results in result %}
+        <li><a href="/check/{{ result }}/"></a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No results are available.</p>
+{% endif %}
         </div>
       </div>
 

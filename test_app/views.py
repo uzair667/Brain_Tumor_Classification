@@ -1,12 +1,14 @@
 from cProfile import label
+from calendar import firstweekday
 from operator import mod
-from tkinter import Image
+from pyexpat import model
 from unittest import result
 from cv2 import FileStorage, log
 from django import http
 from django.http import HttpResponse
 from django.shortcuts import render
-from test_app.models import Topic,webpage,Access_Record
+from django.template import loader
+# from test_app.models import Topic,webpage,Access_Record
 
 import cv2
 import os
@@ -22,11 +24,8 @@ from keras.models import load_model
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Activation, Dropout, Flatten, Dense
 from keras.utils.np_utils import to_categorical
-from keras.preprocessing.image import img_to_array
-from keras.preprocessing.image import load_img
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
-from werkzeug.utils import secure_filename
 
 
 def hello(request):
@@ -125,7 +124,7 @@ def test(request):
 
 
     model.fit(x_train, y_train, 
-    batch_size=100, 
+    batch_size=16, 
     verbose=1, epochs=32, 
     validation_data=(x_test, y_test),
     shuffle=False)
@@ -134,47 +133,45 @@ def test(request):
     model.save('BrainTumor32EpochsCategorical')
     return HttpResponse("hello trained and saved successfully!!")
 
-def check(request):
-    if request.method == "POST":
-        f = request.FILES["test_file"]
 
-        # basepath = os.path.dirname(__file__)
-        # file_path = os.path.join(
-            # basepath, 'uploads', secure_filename(f))
-        # file_url = f.save(file_path)
-        file_name = request.FILES["test_file"]
-        print(file_name.name, file_name.size)
+
+def check(request):        
+
+    if request.method == "POST":
+        file_name = request.FILES['test_file']
         fss = FileSystemStorage()
         file = fss.save(file_name.name, file_name)
-        file_url = fss.url(file_name)
+        file_url = fss.url(file)
         file_full_path = os.path.abspath(file_url)
 
 
-
-    model = load_model("BrainTumor32EpochsCategorical")
-    # img = cv2.imread(file_full_path)
-    # img = cv2.imread("E:\\Django\\test_django\\test_project\\BTC_IMG_DTST\\Training\\glioma_tumor\\gg (1).jpg")
-    img = cv2.imread(file_full_path)
-    img = Image.fromarray(img, 'RGB')
-
-    img = img.resize((64,64))
-
-    img = np.array(img)
-
-    input_img = np.expand_dims(img, axis=0)
-
-    predict_x = model.predict(input_img) 
-    result = np.argmax(predict_x,axis=1)
+        model = load_model("BrainTumor32EpochsCategorical")
+        image=cv2.imread(fss.base_location + file_name.name)
+        image = Image.fromarray(image, 'RGB')
+        image = image.resize((64,64))
+        image=np.array(image)
+        input_img = np.expand_dims(image, axis=0)
+        result=model.predict(input_img)
+        result = np.argmax(result,axis=1)[0]
+        print(result)
 
 
-    if result == 0:
-        return HttpResponse("glioma")
-    elif result == 1:
-        return HttpResponse("meningioma")
-    elif result == 2:
-        return HttpResponse("no tumor")
-    elif result == 3 :
-        return HttpResponse("pituitary")   
+
+        if result == 0:
+            return HttpResponse("Model predicts that it is a Glioma Tumor!!")
+        elif result == 1:
+            return HttpResponse("Model predicts that it is a Meningioma Tumor!!")
+        elif result == 2:
+            return HttpResponse("Model predicts that there is NO tumor!!")
+        elif result == 3 :
+            return HttpResponse("Model predicts that it is a Pituitary Tumor!!")   
+        else:
+            return HttpResponse("no result found")
+
+
+    template = loader.get_template('check/result.html')
+    context = {
+        'Results': result,
+    }
     
-    else:
-        return HttpResponse("no result found")   
+    return HttpResponse(template.render(context,request))        
